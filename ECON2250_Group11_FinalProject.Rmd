@@ -1,5 +1,6 @@
 ---
 title: "ECON2250_Group11_FinalProject"
+author: "Wendell, Connor, & Caroline"
 output: html_document
 date: "2025-11-19"
 ---
@@ -9,13 +10,13 @@ date: "2025-11-19"
 install.packages("tidycensus")
 library(tidycensus)
 
-census_api_key("fa1f22a59be49b0aa3a0a638fc8ec6ab84af62be", install = TRUE)
+census_api_key("fa1f22a59be49b0aa3a0a638fc8ec6ab84af62be", install = TRUE, overwrite = TRUE)
 
 # Pull economic data
 income_data <- get_acs(
-  geography = "state"
-  variables = "B19013_001"
-  year = 2020
+  geography = "state",
+  variables = "B19013_001",
+  year = 2020,
   survey = "acs5"
 )
 
