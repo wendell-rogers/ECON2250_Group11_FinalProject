@@ -21,4 +21,14 @@ income_data <- get_acs(
 )
 
 # Pull education data
+education <- get_acs(
+  geography = "state",
+  variables = c(
+    "B15003_017", # diploma
+    "B15003_022", # Bachelor's
+    "B15003_023"  # Master's
+  ),
+  year = 2020,
+  survey = "acs5"
+)
 ```
