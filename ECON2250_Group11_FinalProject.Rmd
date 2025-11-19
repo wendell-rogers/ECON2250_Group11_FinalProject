@@ -31,7 +31,11 @@ education <- get_acs(
   year = 2020,
   survey = "acs5"
 )
+
+# Download BEA data
+install.packages("BEA.r")
+library(bea.r)
+
+# Unlock BEA key
+bea_Key <- "9EFC7A8B-2A67-486D-9F8B-6AA3A26DBCF8"
 ```
-
-
-Caroline trying hard
