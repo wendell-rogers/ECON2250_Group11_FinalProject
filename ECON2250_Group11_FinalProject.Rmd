@@ -42,19 +42,19 @@ safe_bea_data <- function(bea_object) {
 
 # Pull economic data
 income_data <- get_acs(
-  geography = "state",
+  geography = "county",
   variables = "B19013_001",
   year = 2020,
   survey = "acs5"
 ) %>%
-  select(state = NAME, median_income = estimate)
+  select(county = NAME, median_income = estimate)
 
 # Education Variables
 education_var <- c("B15003_022", "B15003_023", "B15003_024", "B15003_025")
 
 # Pull education data
 education_raw <- get_acs(
-  geography = "state",
+  geography = "county",
   variables = education_var,
   year = 2020,
   survey = "acs5"
@@ -65,7 +65,7 @@ education_final <- education_raw %>%
   summarise(
     edu_bachelors_plus = sum(estimate)
   ) %>%
-  rename(state = NAME)
+  rename(county = NAME)
 
 # Race Variables
 race_var <- c(
@@ -77,54 +77,54 @@ race_var <- c(
 
 # Pull Race Data
 race_data <- get_acs(
-  geography = "state",
+  geography = "county",
   variables = race_var,
   year = 2020,
   survey = "acs5"
 ) %>%
-  select(state = NAME, variable, estimate) %>%
+  select(county = NAME, variable, estimate) %>%
   spread(variable, estimate)
 
 # Pull Age Data
 age_data <- get_acs(
-  geography = "state",
+  geography = "county",
   variables = "DP05_0017E",
   year = 2020,
   survey = "acs5"
 ) %>%
-  select(state = NAME, median_age = estimate)
+  select(county = NAME, median_age = estimate)
 
 # Pull Income Per Capita
 income_per_capita <- get_acs(
-  geography = "state",
+  geography = "county",
   variables = "B19301_001",
   year = 2020,
   survey = "acs5"
 ) %>%
-  select(state = NAME, bea_personal_income = estimate)
+  select(county = NAME, bea_personal_income = estimate)
 
-# Pull State GDP
-state_gdp_final <- get_acs(
-  geography = "state",
+# Pull County GDP
+county_gdp_final <- get_acs(
+  geography = "county",
   variables = "B01003_001",
   year = 2020,
   survey = "acs5"
 ) %>%
-  select(state = NAME, gdp_state = estimate)
+  select(county = NAME, gdp_county = estimate)
 
 # Get Data Together
-state_data <- income_data %>%
-  left_join(education_final, by = "state") %>%
-  left_join(race_data, by = "state") %>%
-  left_join(age_data, by = "state") %>%
-  left_join(income_per_capita, by = "state") %>%
-  left_join(state_gdp_final, by = "state") %>%
+county_data <- income_data %>%
+  left_join(education_final, by = "county") %>%
+  left_join(race_data, by = "county") %>%
+  left_join(age_data, by = "county") %>%
+  left_join(income_per_capita, by = "county") %>%
+  left_join(county_gdp_final, by = "county") %>%
   clean_names()
 
 # Develop Regression Model
 regression_model <- lm(
-  median_income ~ edu_bachelors_plus + dp05_0038p + dp05_0071p + dp05_0066p + dp05_0037p + median_age + bea_personal_income + gdp_state, 
-  data = state_data
+  median_income ~ edu_bachelors_plus + dp05_0038p + dp05_0071p + dp05_0066p + dp05_0037p + median_age + bea_personal_income + gdp_county, 
+  data = county_data
 )
 
 summary(regression_model)
