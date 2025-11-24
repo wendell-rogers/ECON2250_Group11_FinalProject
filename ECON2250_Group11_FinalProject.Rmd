@@ -155,4 +155,47 @@ ggplot(county_data, aes(x = bea_personal_income, y = median_income)) +
   
   scale_y_continuous(labels = scales::dollar) +
   scale_x_continuous(labels = scales::dollar)
+
+# Summary Relationship Plot
+
+install.packages("broom")
+library(broom)
+library(ggplot2)
+library(dplyr)
+
+standardized_data <- county_data %>%
+  mutate(across(where(is.numeric), scale))
+
+standardized_regression_model <- lm(
+  median_income ~ edu_bachelors_plus + dp05_0038p + dp05_0071p + dp05_0066p + dp05_0037p + median_age + bea_personal_income + gdp_county,
+  data = standardized_data
+)
+
+coef_data <- tidy(standardized_regression_model, conf.int = TRUE) %>%
+  filter(term != "(Intercept)") %>%
+  mutate(
+    term = case_when(
+      term == "edu_bachelors_plus" ~ "Education (Count)",
+      term == "dp05_0038p" ~ "Black %",
+      term == "dp05_0071p" ~ "Hispanic %",
+      term == "dp05_0066p" ~ "Asian %",
+      term == "dp05_0037p" ~ "White %",
+      term == "median_age" ~ "Median Age",
+      term == "bea_personal_income" ~ "Per Capita Income",
+      term == "gdp_county" ~ "Total Population",
+      TRUE ~ term
+    )
+  )
+
+ggplot(coef_data, aes(x = estimate, y = reorder(term, estimate))) +
+  geom_point(size = 3) +
+  geom_errorbarh(aes(xmin = conf.low, xmax = conf.high), height = 0.2) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "red") +
+  labs(
+    title = "Standardized Regression Coefficients on County Median Income",
+    subtitle = "Relative Impact of Predictors (in Standard Deviation Units)",
+    x = "Standardized Estimate (Beta)",
+    y = "Predictor Variable"
+  ) +
+  theme_minimal()
 ```
