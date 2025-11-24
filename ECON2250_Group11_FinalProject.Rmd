@@ -6,11 +6,32 @@ date: "2025-11-19"
 ---
 
 ```{r setup, include=FALSE}
-# Get census data
-install.packages("tidycensus")
-library(tidycensus)
+# Install Necessary Packages
+packages <- c("tidyverse", "tidycensus", "bea.R", "janitor")
+install.packages(setdiff(packages, rownames(installed.packages())))
+lapply(packages, library, character.only = TRUE)
 
+# Enable Census Data
 census_api_key("fa1f22a59be49b0aa3a0a638fc8ec6ab84af62be", install = TRUE, overwrite = TRUE)
+
+# Enable BEA Data
+bea_Key <- "9EFC7A8B-2A67-486D-9F8B-6AA3A26DBCF8"
+
+beaGet(list(
+  'UserID' = bea_Key,
+  'Method' = 'GetParameterValues',
+  'datasetname' = 'Regional'
+))
+
+# Stops BEA Related Errors
+safe_bea_data <- function(bea_object) {
+  if (!("Data" %in% names(bea_object))) {
+    print("❌ BEA returned an error instead of data:")
+    print(bea_object)
+    stop("Fix the BEA request above — no $Data field found.")
+  }
+  return(bea_object$Data)
+}
 
 # Pull economic data
 income_data <- get_acs(
@@ -18,24 +39,86 @@ income_data <- get_acs(
   variables = "B19013_001",
   year = 2020,
   survey = "acs5"
-)
+) %>%
+  select(state = NAME, median_income = estimate)
+
+# Education Variables
+education_var <- c("B15003_022", "B15003_023", "B15003_024", "B15003_025")
 
 # Pull education data
-education <- get_acs(
+education_raw <- get_acs(
   geography = "state",
-  variables = c(
-    "B15003_017", # diploma
-    "B15003_022", # Bachelor's
-    "B15003_023"  # Master's
-  ),
+  variables = education_var,
   year = 2020,
   survey = "acs5"
 )
 
-# Download BEA data
-install.packages("bea.R")
-library(bea.R)
+education_final <- education_raw %>%
+  group_by(NAME) %>%
+  summarise(
+    edu_bachelors_plus = sum(estimate)
+  ) %>%
+  rename(state = NAME)
 
-# Unlock BEA key
-bea_Key <- "9EFC7A8B-2A67-486D-9F8B-6AA3A26DBCF8"
+# Race Variables
+race_var <- c(
+  black = "DP05_0038PE",
+  hispanic = "DP05_0071PE",
+  asian = "DP05_0066PE",
+  white = "DP05_0037PE"
+)
+
+# Pull Race Data
+race_data <- get_acs(
+  geography = "state",
+  variables = race_var,
+  year = 2020,
+  survey = "acs5"
+) %>%
+  select(state = NAME, variable, estimate) %>%
+  spread(variable, estimate)
+
+# Pull Age Data
+age_data <- get_acs(
+  geography = "state",
+  variables = "DP05_0017E",
+  year = 2020,
+  survey = "acs5"
+) %>%
+  select(state = NAME, median_age = estimate)
+
+# Pull Income Per Capita
+income_per_capita <- get_acs(
+  geography = "state",
+  variables = "B19301_001",
+  year = 2020,
+  survey = "acs5"
+) %>%
+  select(state = NAME, bea_personal_income = estimate)
+
+# Pull State GDP
+state_gdp_final <- get_acs(
+  geography = "state",
+  variables = "B01003_001",
+  year = 2020,
+  survey = "acs5"
+) %>%
+  select(state = NAME, gdp_state = estimate)
+
+# Get Data Together
+state_data <- income_data %>%
+  left_join(education_final, by = "state") %>%
+  left_join(race_data, by = "state") %>%
+  left_join(age_data, by = "state") %>%
+  left_join(income_per_capita, by = "state") %>%
+  left_join(state_gdp_final, by = "state") %>%
+  clean_names()
+
+# Develop Regression Model
+regression_model <- lm(
+  median_income ~ edu_bachelors_plus + dp05_0038p + dp05_0071p + dp05_0066p + dp05_0037p + median_age + bea_personal_income + gdp_state, 
+  data = state_data
+)
+
+summary(regression_model)
 ```
