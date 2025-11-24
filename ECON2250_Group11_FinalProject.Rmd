@@ -128,4 +128,31 @@ regression_model <- lm(
 )
 
 summary(regression_model)
+
+# Summary Scatter Plot
+library(ggplot2)
+
+ggplot(county_data, aes(x = bea_personal_income, y = median_income)) +
+  
+  geom_point(
+    alpha = 0.5, 
+    color = "darkblue"
+  ) + 
+  geom_smooth(
+    method = "lm", 
+    color = "red", 
+    se = FALSE
+  ) + 
+  
+  labs(
+    title = "County Median Household Income vs. Per Capita Income",
+    subtitle = "Visualizing the Relationship of the Outcome Variable with the Strongest Predictor",
+    x = "Per Capita Income (USD)",
+    y = "Median Household Income (USD)"
+  ) +
+  
+  theme_minimal() +
+  
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::dollar)
 ```
