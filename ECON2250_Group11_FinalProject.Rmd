@@ -1,15 +1,22 @@
 ---
 title: "ECON2250_Group11_FinalProject"
 author: "Wendell, Connor, & Caroline"
-output: html_document
 date: "2025-11-19"
+output:
+  pdf_document: default
+  html_document: default
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include=TRUE}
 # Install Necessary Packages
+options(repos = c(CRAN = "https://cran.rstudio.com/"))
+
 packages <- c("tidyverse", "tidycensus", "bea.R", "janitor")
 install.packages(setdiff(packages, rownames(installed.packages())))
 lapply(packages, library, character.only = TRUE)
+
+install.packages("tinytex")
+library(tinytex)
 
 # Enable Census Data
 census_api_key("fa1f22a59be49b0aa3a0a638fc8ec6ab84af62be", install = TRUE, overwrite = TRUE)
@@ -26,7 +33,7 @@ beaGet(list(
 # Stops BEA Related Errors
 safe_bea_data <- function(bea_object) {
   if (!("Data" %in% names(bea_object))) {
-    print("❌ BEA returned an error instead of data:")
+    print("X: BEA returned an error instead of data:")
     print(bea_object)
     stop("Fix the BEA request above — no $Data field found.")
   }
