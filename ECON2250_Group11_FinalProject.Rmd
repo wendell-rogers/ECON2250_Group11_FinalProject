@@ -129,7 +129,7 @@ regression_model <- lm(
 
 summary(regression_model)
 
-# Summary Scatter Plot
+# Plot Relating PCI & Household Income
 library(ggplot2)
 
 ggplot(county_data, aes(x = bea_personal_income, y = median_income)) +
@@ -156,7 +156,7 @@ ggplot(county_data, aes(x = bea_personal_income, y = median_income)) +
   scale_y_continuous(labels = scales::dollar) +
   scale_x_continuous(labels = scales::dollar)
 
-# Summary Relationship Plot
+# Plot Relating All Variables
 
 install.packages("broom")
 library(broom)
@@ -198,4 +198,33 @@ ggplot(coef_data, aes(x = estimate, y = reorder(term, estimate))) +
     y = "Predictor Variable"
   ) +
   theme_minimal()
+
+
+# Create a Plot Relating Education & Income
+library(ggplot2)
+
+ggplot(county_data, aes(x = edu_bachelors_plus, y = median_income)) +
+  
+  geom_point(
+    alpha = 0.5, 
+    color = "darkgreen"
+  ) + 
+  
+  geom_smooth(
+    method = "lm", 
+    color = "red", 
+    se = FALSE
+  ) + 
+
+  labs(
+    title = "County Median Household Income vs. Count of Highly Educated Residents",
+    subtitle = "Relationship between Income and Absolute Count of Residents with Bachelor's Degree or Higher",
+    x = "Count of Residents with Bachelor's Degree or Higher",
+    y = "Median Household Income (USD)"
+  ) +
+  
+  theme_minimal() +
+  
+  scale_y_continuous(labels = scales::dollar) +
+  scale_x_continuous(labels = scales::comma)
 ```
